@@ -1,0 +1,7 @@
+ebooklib>=0.18
+beautifulsoup4>=4.12
+lxml>=5.1
+requests>=2.31
+tqdm>=4.66
+mutagen>=1.47
+google-auth>=2.29

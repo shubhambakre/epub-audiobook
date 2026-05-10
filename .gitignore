@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.envrc
+
+# macOS
+.DS_Store
+
+# Secrets / credentials -- NEVER commit
+*.json
+!package.json
+!package-lock.json
+*.key
+*credentials*
+*service-account*
+*sa.json
+key.json
+
+# Inputs / outputs (audiobook artifacts can be huge)
+*.epub
+*.mp3
+*.m4b
+*.m4a
+*.wav
+
+# Working dirs
+audiobook_chunks_*/
+chunks/
+out/
