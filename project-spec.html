@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>epub-audiobook — Project Specification</title>
+<meta name="description" content="Living project specification for epub-audiobook: convert an EPUB to a single audiobook MP3 with chapter markers via Google Cloud TTS Neural2.">
+<style>
+  :root{--bg:#0b0c10;--bg2:#12141a;--panel:#161922;--border:#242938;--border2:#323a4f;--text:#e8eaf0;--muted:#9aa3b5;--faint:#6b7382;--accent:#34b3a0;--accent2:#7c8cff;--accent-soft:#0f2b29;--goal:#34d399;--goal-bg:#0d2b22;--risk:#f87171;--risk-bg:#2a1416;--decision:#60a5fa;--decision-bg:#0f2030;--question:#fbbf24;--question-bg:#2a2008;--code-bg:#0e1017;--radius:12px}
+  [data-theme="light"]{--bg:#fbfbfd;--bg2:#f2f4f8;--panel:#fff;--border:#e6e8ee;--border2:#d3d8e2;--text:#13151b;--muted:#566072;--faint:#8b909f;--accent:#0d9488;--accent2:#5b54e6;--accent-soft:#e7f6f4;--goal:#059669;--goal-bg:#e9f8f2;--risk:#dc2626;--risk-bg:#fdecec;--decision:#2563eb;--decision-bg:#eaf1fe;--question:#b45309;--question-bg:#fdf4e3;--code-bg:#f4f5fa}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:15.5px;line-height:1.65;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+  code,pre,kbd{font-family:"SF Mono",ui-monospace,"Fira Code",Consolas,monospace}
+  .skip{position:absolute;left:-999px;top:0;background:var(--accent);color:#fff;padding:.5rem .8rem;border-radius:8px;z-index:100}.skip:focus{left:.5rem;top:.5rem}
+  .wrap{display:grid;grid-template-columns:280px 1fr;max-width:1240px;margin:0 auto}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  header.top{grid-column:1/-1;position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.7rem 1.4rem;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--border)}
+  .brand{display:flex;align-items:center;gap:.55rem;font-weight:750}
+  .brand .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .brand small{color:var(--muted);font-weight:550;font-size:.72rem}
+  header.top .sp{flex:1}
+  header.top button,header.top a.btn{border:1px solid var(--border2);background:var(--panel);color:var(--text);padding:.38rem .7rem;border-radius:9px;font-size:.82rem;font-weight:600;cursor:pointer}
+  nav.toc{position:sticky;top:57px;align-self:start;max-height:calc(100vh - 57px);overflow:auto;padding:1.2rem 1rem 3rem;border-right:1px solid var(--border)}
+  @media(max-width:900px){nav.toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--border)}}
+  nav.toc .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;color:var(--faint);font-weight:700;margin:0 .6rem .5rem}
+  nav.toc ol{list-style:none;counter-reset:s;margin:0}
+  nav.toc a{display:block;color:var(--muted);font-size:.85rem;padding:.3rem .6rem;border-radius:7px;counter-increment:s}
+  nav.toc a::before{content:counter(s) ". ";color:var(--faint)}
+  nav.toc a:hover{color:var(--text);background:var(--bg2);text-decoration:none}
+  nav.toc a.active{color:var(--text);background:var(--accent-soft);font-weight:600}
+  main{padding:2rem 2.4rem 6rem;min-width:0}@media(max-width:900px){main{padding:1.4rem 1.1rem 4rem}}
+  .meta{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0 1.6rem}
+  .chip{font-size:.74rem;font-weight:600;padding:.25rem .6rem;border-radius:7px;background:var(--bg2);border:1px solid var(--border);color:var(--muted)}.chip b{color:var(--text)}
+  .chip.status{background:var(--goal-bg);border-color:color-mix(in srgb,var(--goal) 40%,transparent);color:var(--goal)}
+  section{scroll-margin-top:70px;margin-bottom:2.4rem;padding-top:.5rem}
+  h1{font-size:2rem;letter-spacing:-.03em;line-height:1.15}
+  h2{font-size:1.3rem;letter-spacing:-.02em;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:.6rem}
+  h2 .n{font-size:.85rem;color:var(--accent);font-weight:700}
+  h3{font-size:1.02rem;margin:1.3rem 0 .5rem}
+  p{margin:.55rem 0}.lead{font-size:1.08rem;color:var(--muted);max-width:70ch}
+  ul{margin:.5rem 0 .5rem 1.3rem}li{margin:.28rem 0}.muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.88rem}
+  th,td{text-align:left;padding:.5rem .7rem;border:1px solid var(--border);vertical-align:top}
+  th{background:var(--bg2);color:var(--muted);font-weight:650;font-size:.76rem;text-transform:uppercase;letter-spacing:.03em}
+  tr:nth-child(even) td{background:color-mix(in srgb,var(--bg2) 45%,transparent)}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;overflow:auto;font-size:.84rem;line-height:1.55;position:relative;margin:.7rem 0}
+  :not(pre)>code{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:.08rem .34rem;font-size:.85em;color:var(--accent)}
+  .copy{position:absolute;top:.4rem;right:.4rem;font-size:.68rem;padding:.18rem .5rem;border:1px solid var(--border2);background:var(--panel);color:var(--muted);border-radius:6px;cursor:pointer;opacity:0}
+  pre:hover .copy{opacity:1}
+  details{border:1px solid var(--border);border-radius:10px;margin:.6rem 0;background:var(--panel);overflow:hidden}
+  details>summary{cursor:pointer;padding:.65rem .9rem;font-weight:600;font-size:.92rem;list-style:none;display:flex;align-items:center;gap:.5rem}
+  details>summary::-webkit-details-marker{display:none}
+  details>summary::before{content:"▸";color:var(--accent);transition:transform .15s}
+  details[open]>summary::before{transform:rotate(90deg)}
+  details>summary:hover{background:var(--bg2)}
+  details .dbody{padding:.2rem 1rem 1rem;border-top:1px solid var(--border)}
+  .cl{border:1px solid var(--border);border-left-width:4px;border-radius:0 10px 10px 0;padding:.7rem .95rem;margin:.7rem 0;font-size:.92rem}
+  .cl .h{font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem}
+  .cl.goal{border-left-color:var(--goal);background:var(--goal-bg)}.cl.goal .h{color:var(--goal)}
+  .cl.risk{border-left-color:var(--risk);background:var(--risk-bg)}.cl.risk .h{color:var(--risk)}
+  .cl.decision{border-left-color:var(--decision);background:var(--decision-bg)}.cl.decision .h{color:var(--decision)}
+  .cl.question{border-left-color:var(--question);background:var(--question-bg)}.cl.question .h{color:var(--question)}
+  .prompt{color:var(--faint);font-style:italic;font-size:.86rem}
+  .prompt::before{content:"✎ team: ";font-style:normal;font-weight:700;color:var(--question)}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.8rem 0;font-size:.84rem}
+  .flow .step{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem}.flow .arr{color:var(--faint)}
+  footer{grid-column:1/-1;border-top:1px solid var(--border);padding:1.6rem 1.4rem;color:var(--faint);font-size:.83rem;text-align:center}
+</style>
+</head>
+<body>
+<a class="skip" href="#s1">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="dot"></span> epub-audiobook <small>· Project Specification</small></div>
+    <span class="sp"></span>
+    <button id="expand">Expand all</button>
+    <a class="btn" href="https://github.com/shubhambakre/epub-audiobook" target="_blank" rel="noopener">GitHub ↗</a>
+    <button id="theme" aria-label="Toggle theme">◐</button>
+  </header>
+
+  <nav class="toc" aria-label="Table of contents">
+    <div class="lbl">Contents</div>
+    <ol>
+      <li><a href="#s1">Executive summary</a></li><li><a href="#s2">Problem statement</a></li>
+      <li><a href="#s3">Goals</a></li><li><a href="#s4">Non-goals</a></li>
+      <li><a href="#s5">Stakeholders</a></li><li><a href="#s6">Scope</a></li>
+      <li><a href="#s7">Functional requirements</a></li><li><a href="#s8">Non-functional requirements</a></li>
+      <li><a href="#s9">Architecture overview</a></li><li><a href="#s10">Data model &amp; interfaces</a></li>
+      <li><a href="#s11">Main workflows</a></li><li><a href="#s12">Deployment &amp; environments</a></li>
+      <li><a href="#s13">Testing &amp; validation</a></li><li><a href="#s14">Monitoring &amp; operations</a></li>
+      <li><a href="#s15">Risks &amp; assumptions</a></li><li><a href="#s16">Open questions</a></li>
+      <li><a href="#s17">Acceptance criteria</a></li><li><a href="#s18">Ownership &amp; changelog</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <h1>epub-audiobook</h1>
+    <p class="lead">Living specification for a CLI that converts an EPUB into a single audiobook MP3 with navigable chapter markers, using Google Cloud Text-to-Speech Neural2 voices.</p>
+    <div class="meta">
+      <span class="chip status">Status: <b>Working tool</b></span>
+      <span class="chip">Version: <b>1.0</b></span><span class="chip">Updated: <b>2026-06-11</b></span>
+      <span class="chip">Owner: <b>@shubhambakre</b></span><span class="chip">Type: <b>Python CLI</b></span>
+    </div>
+
+    <section id="s1"><h2><span class="n">01</span> Executive summary</h2>
+      <p>A single-purpose Python CLI that turns an EPUB into one MP3 audiobook with ID3 chapter markers, synthesized with Google Cloud TTS Neural2 voices. It is engineered for speed and cost on long books: SSML is packed into ~4.8&nbsp;KB sentence-aligned chunks, synthesized in parallel under a rate limiter, and concatenated with <code>ffmpeg -c copy</code> (no re-encode). Runs are resumable via a per-chunk cache.</p>
+      <div class="cl decision"><div class="h">◆ Decision</div>Emit ID3 <code>CHAP</code>/<code>CTOC</code> frames in MP3 rather than producing M4B — chapter nav works in Apple Books/VLC without the heavier container.</div>
+    </section>
+
+    <section id="s2"><h2><span class="n">02</span> Problem statement</h2>
+      <p>Common EPUB→MP3 scripts re-encode every chunk through <code>pydub</code>, run sequentially, and emit tiny SSML payloads — slow and expensive on book-length text, often with no chapter navigation.</p>
+      <div class="cl risk"><div class="h">▲ Pain addressed</div>Hours of needless re-encoding and serial API calls, plus audiobooks with no way to jump between chapters.</div>
+    </section>
+
+    <section id="s3"><h2><span class="n">03</span> Goals</h2>
+      <div class="cl goal"><div class="h">● G1 — Fast</div>Parallel synthesis + <code>-c copy</code> concat; no re-encode of audio.</div>
+      <div class="cl goal"><div class="h">● G2 — Navigable</div>Real chapter markers via ID3 CHAP/CTOC.</div>
+      <div class="cl goal"><div class="h">● G3 — Cheap &amp; predictable</div><code>--dry-run</code> reports exact character counts before spending TTS quota.</div>
+      <div class="cl goal"><div class="h">● G4 — Resumable</div>Per-chunk cache keyed by chapter+index survives interruptions.</div>
+    </section>
+
+    <section id="s4"><h2><span class="n">04</span> Non-goals</h2>
+      <ul>
+        <li>Not a GUI or a hosted service — it is a local CLI.</li>
+        <li>Not a multi-provider TTS abstraction (Google Neural2 only).</li>
+        <li>Not a DRM remover; input must be a readable EPUB.</li>
+        <li>Does not produce M4B/M4A by design.</li>
+      </ul>
+    </section>
+
+    <section id="s5"><h2><span class="n">05</span> Stakeholders</h2>
+      <table><tr><th>Stakeholder</th><th>Interest</th></tr>
+        <tr><td>Reader/listener (user)</td><td>High-quality, chaptered audiobook, cheaply</td></tr>
+        <tr><td>Maintainer (@shubhambakre)</td><td>Simple, fast, correct single-file tool</td></tr>
+        <tr><td>Google Cloud TTS</td><td>External dependency &amp; cost boundary</td></tr>
+      </table>
+    </section>
+
+    <section id="s6"><h2><span class="n">06</span> Scope</h2>
+      <table><tr><th>In scope</th><th>Out of scope</th></tr>
+        <tr><td>EPUB parse, SSML chunking, parallel TTS, ffmpeg concat, ID3 chapters, resume</td><td>Other input formats (PDF, MOBI), other TTS vendors</td></tr>
+        <tr><td>Voice + speaking-rate selection, emphasis from italics/bold</td><td>Audio editing/mastering beyond concatenation</td></tr>
+      </table>
+    </section>
+
+    <section id="s7"><h2><span class="n">07</span> Functional requirements</h2>
+      <table><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr>
+        <tr><td>FR-1</td><td>Parse EPUB; extract chapters and ordered text (ebooklib + BeautifulSoup).</td><td>Must</td></tr>
+        <tr><td>FR-2</td><td>Sentence-align and pack SSML into ≤4.8&nbsp;KB chunks.</td><td>Must</td></tr>
+        <tr><td>FR-3</td><td>Synthesize chunks in parallel (default 8 workers) under a token-bucket limiter.</td><td>Must</td></tr>
+        <tr><td>FR-4</td><td>Concatenate with <code>ffmpeg -c copy</code>; write ID3 CHAP/CTOC chapter frames.</td><td>Must</td></tr>
+        <tr><td>FR-5</td><td><code>--dry-run</code> reports chapter/chunk/char counts with no API calls.</td><td>Must</td></tr>
+        <tr><td>FR-6</td><td>Resume from a per-chunk cache in <code>--workdir</code>.</td><td>Should</td></tr>
+        <tr><td>FR-7</td><td>Map italics/bold to SSML <code>&lt;emphasis&gt;</code> within sentence boundaries.</td><td>Could</td></tr>
+      </table>
+    </section>
+
+    <section id="s8"><h2><span class="n">08</span> Non-functional requirements</h2>
+      <table><tr><th>ID</th><th>Category</th><th>Requirement</th></tr>
+        <tr><td>NFR-1</td><td>Cost</td><td>Stay within Neural2 free tier where possible; surface counts before spend.</td></tr>
+        <tr><td>NFR-2</td><td>Performance</td><td>No audio re-encode; parallelism bounded by a rate limiter.</td></tr>
+        <tr><td>NFR-3</td><td>Reliability</td><td>Idempotent/resumable; an interrupted run does not redo finished chunks.</td></tr>
+        <tr><td>NFR-4</td><td>Security</td><td>Credentials via env/service-account; <code>.gitignore</code> blocks <code>*.json</code>/<code>*.key</code>.</td></tr>
+        <tr><td>NFR-5</td><td>Portability</td><td>macOS/Linux with Python 3.10+ and <code>ffmpeg</code>.</td></tr>
+      </table>
+    </section>
+
+    <section id="s9"><h2><span class="n">09</span> Architecture overview</h2>
+      <p>A single module (<code>audiobook.py</code>) orchestrating a linear pipeline with a parallel synthesis stage.</p>
+      <div class="flow"><span class="step">EPUB</span><span class="arr">→</span><span class="step">parse chapters</span><span class="arr">→</span><span class="step">SSML chunker</span><span class="arr">→</span><span class="step">parallel TTS (rate-limited)</span><span class="arr">→</span><span class="step">ffmpeg concat</span><span class="arr">→</span><span class="step">ID3 chapters</span><span class="arr">→</span><span class="step">out.mp3</span></div>
+    </section>
+
+    <section id="s10"><h2><span class="n">10</span> Data model &amp; interfaces</h2>
+      <details open><summary>CLI interface</summary><div class="dbody"><pre><code>python audiobook.py INPUT.epub OUT.mp3 [--voice ID] [--speaking-rate R]
+                    [--dry-run] [--workdir DIR] [--keep-workdir]</code></pre></div></details>
+      <details><summary>External interface — Google Cloud TTS</summary><div class="dbody">
+        <p>Auth: <code>GOOGLE_APPLICATION_CREDENTIALS</code> (service account, recommended) or <code>GOOGLE_TTS_API_KEY</code>. Output: per-chunk MP3 bytes, cached on disk keyed by chapter+index.</p></div></details>
+      <p class="prompt">Document the exact cache filename scheme and the SSML emphasis rules.</p>
+    </section>
+
+    <section id="s11"><h2><span class="n">11</span> Main workflows</h2>
+      <details open><summary>W1 — Estimate then synthesize</summary><div class="dbody"><p><code>--dry-run</code> to see char count/cost → real run → resumes from cache if interrupted.</p></div></details>
+      <details><summary>W2 — Tune voice/rate</summary><div class="dbody"><p>Re-run with <code>--voice</code> / <code>--speaking-rate</code>; cached chunks for unchanged settings are reused.</p></div></details>
+    </section>
+
+    <section id="s12"><h2><span class="n">12</span> Deployment &amp; environments</h2>
+      <p>Run-as-needed local CLI; no server.</p>
+      <table><tr><th>Env</th><th>Setup</th></tr>
+        <tr><td>Local</td><td><code>python3 -m venv .venv</code> · <code>pip install -r requirements.txt</code> · <code>brew install ffmpeg</code></td></tr>
+        <tr><td>Auth</td><td>Service-account JSON or API key via environment variables</td></tr>
+      </table>
+    </section>
+
+    <section id="s13"><h2><span class="n">13</span> Testing &amp; validation</h2>
+      <p>Primary validation is <code>--dry-run</code> on representative EPUBs (counts + chunk boundaries), plus spot-checking chapter navigation in a player.</p>
+      <div class="cl question"><div class="h">? Gap</div>No automated test suite yet.</div>
+      <p class="prompt">Add unit tests for the SSML chunker (boundary/size) and a golden-file test for ID3 chapter frames.</p>
+    </section>
+
+    <section id="s14"><h2><span class="n">14</span> Monitoring &amp; operations</h2>
+      <ul><li>Progress via <code>tqdm</code> bars during synthesis.</li><li>Cost visibility via <code>--dry-run</code> char counts.</li><li>Failure recovery via the resumable cache.</li></ul>
+      <p class="prompt">Define behavior on partial API failures (retry/backoff policy) and a max-cost guardrail.</p>
+    </section>
+
+    <section id="s15"><h2><span class="n">15</span> Risks &amp; assumptions</h2>
+      <div class="cl risk"><div class="h">▲ R1 — Cost overrun</div>Large books exceed the free tier. <em>Mitigation:</em> mandatory <code>--dry-run</code> habit.</div>
+      <div class="cl risk"><div class="h">▲ R2 — Credential leakage</div>API keys in URLs/commits. <em>Mitigation:</em> prefer service accounts; gitignore secrets.</div>
+      <div class="cl risk"><div class="h">▲ R3 — Player compatibility</div>Some players ignore ID3 chapters. <em>Mitigation:</em> document tested players (Apple Books, VLC).</div>
+      <p><strong>Assumptions:</strong> input is a non-DRM EPUB; <code>ffmpeg</code> on PATH; English/European Neural2 voice.</p>
+    </section>
+
+    <section id="s16"><h2><span class="n">16</span> Open questions</h2>
+      <div class="cl question"><div class="h">? Q1</div>Support additional TTS vendors or local TTS for offline/cost-free use?</div>
+      <div class="cl question"><div class="h">? Q2</div>Optional M4B export for players that prefer it?</div>
+      <div class="cl question"><div class="h">? Q3</div>Per-chapter MP3 output mode in addition to a single file?</div>
+    </section>
+
+    <section id="s17"><h2><span class="n">17</span> Acceptance criteria</h2>
+      <table><tr><th>#</th><th>Criterion</th><th>Status</th></tr>
+        <tr><td>AC-1</td><td>EPUB → single MP3 with working chapter navigation.</td><td>✅ Met</td></tr>
+        <tr><td>AC-2</td><td><code>--dry-run</code> reports accurate counts with no API spend.</td><td>✅ Met</td></tr>
+        <tr><td>AC-3</td><td>Interrupted run resumes without re-synthesizing finished chunks.</td><td>✅ Met</td></tr>
+        <tr><td>AC-4</td><td>Automated tests for chunker + chapter frames.</td><td>⏳ Planned</td></tr>
+      </table>
+    </section>
+
+    <section id="s18"><h2><span class="n">18</span> Ownership &amp; changelog</h2>
+      <p><strong>Owner:</strong> @shubhambakre &nbsp;·&nbsp; <strong>Reviewers:</strong> <span class="prompt">add reviewers</span></p>
+      <table><tr><th>Date</th><th>Version</th><th>Change</th></tr>
+        <tr><td>2026-06-11</td><td>1.0</td><td>Initial living specification.</td></tr>
+      </table>
+    </section>
+  </main>
+  <footer>epub-audiobook · Project Specification · <a href="https://github.com/shubhambakre/epub-audiobook" target="_blank" rel="noopener">github.com/shubhambakre/epub-audiobook</a></footer>
+</div>
+<script>
+  const root=document.documentElement,tb=document.getElementById("theme");
+  const saved=localStorage.getItem("spec-theme");if(saved)root.dataset.theme=saved;
+  tb.onclick=()=>{const t=root.dataset.theme==="dark"?"light":"dark";root.dataset.theme=t;localStorage.setItem("spec-theme",t);};
+  let allOpen=false;const eb=document.getElementById("expand");
+  eb.onclick=()=>{allOpen=!allOpen;document.querySelectorAll("details").forEach(d=>d.open=allOpen);eb.textContent=allOpen?"Collapse all":"Expand all";};
+  document.querySelectorAll("pre").forEach(pre=>{const b=document.createElement("button");b.className="copy";b.textContent="Copy";b.onclick=()=>{navigator.clipboard.writeText(pre.querySelector("code").innerText);b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1200);};pre.appendChild(b);});
+  const links=[...document.querySelectorAll("nav.toc a")],map=new Map(links.map(a=>[a.getAttribute("href").slice(1),a]));
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove("active"));map.get(e.target.id)?.classList.add("active");}});},{rootMargin:"-15% 0px -75% 0px"});
+  document.querySelectorAll("main section[id]").forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>epub-audiobook · Documentation</title>
+<meta name="description" content="Convert an EPUB into a single audiobook MP3 with navigable chapter markers, using Google Cloud Text-to-Speech Neural2 voices. Parallel, resumable, no re-encode.">
+<style>
+  :root{--bg:#0b0c10;--bg2:#12141a;--panel:#161922;--border:#242938;--border2:#323a4f;--text:#e8eaf0;--muted:#9aa3b5;--faint:#6b7382;--accent:#34b3a0;--accent2:#7c8cff;--accent-soft:#0f2b29;--ink-on-accent:#fff;--ok:#34d399;--warn:#fbbf24;--code-bg:#0e1017;--radius:12px;--grad:linear-gradient(135deg,var(--accent),var(--accent2))}
+  [data-theme="light"]{--bg:#fbfbfd;--bg2:#f3f4f8;--panel:#fff;--border:#e6e8ee;--border2:#d4d8e2;--text:#13151b;--muted:#5b6273;--faint:#8b909f;--accent:#0d9488;--accent2:#5b54e6;--accent-soft:#e7f6f4;--ok:#059669;--warn:#b45309;--code-bg:#f5f6fa}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.65;background:radial-gradient(900px 500px at 85% -8%,color-mix(in srgb,var(--accent) 10%,transparent),transparent),var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+  code,pre,kbd{font-family:"SF Mono",ui-monospace,"Fira Code",Consolas,monospace}
+  .skip{position:absolute;left:-999px;top:0;background:var(--accent);color:#fff;padding:.5rem .8rem;border-radius:8px;z-index:100}.skip:focus{left:.5rem;top:.5rem}
+  .wrap{display:grid;grid-template-columns:260px 1fr;max-width:1180px;margin:0 auto}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr}}
+  header.top{grid-column:1/-1;position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:1rem;padding:.7rem 1.4rem;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--border)}
+  .brand{display:flex;align-items:center;gap:.55rem;font-weight:750;letter-spacing:-.01em}
+  .brand .dot{width:22px;height:22px;border-radius:7px;background:var(--grad);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 55%,transparent)}
+  .brand small{color:var(--muted);font-weight:550;font-size:.72rem}
+  header.top .sp{flex:1}
+  header.top a.gh,.themebtn{border:1px solid var(--border2);background:var(--panel);color:var(--text);padding:.4rem .7rem;border-radius:9px;font-size:.84rem;font-weight:600;cursor:pointer}
+  nav.toc{position:sticky;top:57px;align-self:start;height:calc(100vh - 57px);overflow:auto;padding:1.4rem 1rem 3rem;border-right:1px solid var(--border)}
+  @media(max-width:880px){nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}}
+  nav.toc .grp{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:700;margin:1.1rem .6rem .4rem}
+  nav.toc a{display:block;color:var(--muted);font-size:.88rem;padding:.32rem .6rem;border-radius:7px}
+  nav.toc a:hover{color:var(--text);background:var(--bg2);text-decoration:none}
+  nav.toc a.active{color:var(--text);background:var(--accent-soft);font-weight:600}
+  main{padding:2rem 2.2rem 5rem;min-width:0}@media(max-width:880px){main{padding:1.5rem 1.2rem 4rem}}
+  section{scroll-margin-top:72px;margin-bottom:2.6rem}
+  h1{font-size:2rem;letter-spacing:-.03em;line-height:1.15;margin-bottom:.4rem}
+  h2{font-size:1.35rem;letter-spacing:-.02em;margin:0 0 .9rem;padding-top:.4rem}
+  h3{font-size:1.05rem;margin:1.4rem 0 .5rem}
+  p{margin:.6rem 0}.lead{font-size:1.1rem;color:var(--muted);max-width:64ch}
+  ul,ol{margin:.6rem 0 .6rem 1.2rem}li{margin:.3rem 0}
+  .muted{color:var(--muted)}
+  .badges{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}
+  .badge{font-size:.74rem;font-weight:650;padding:.25rem .6rem;border-radius:999px;background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;overflow:auto;font-size:.86rem;line-height:1.55;position:relative;margin:.7rem 0}
+  pre code{color:var(--text)}
+  :not(pre)>code{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:.1rem .35rem;font-size:.85em;color:var(--accent)}
+  .copy{position:absolute;top:.45rem;right:.45rem;font-size:.7rem;padding:.2rem .5rem;border:1px solid var(--border2);background:var(--panel);color:var(--muted);border-radius:6px;cursor:pointer;opacity:0;transition:.15s}
+  pre:hover .copy{opacity:1}.copy:hover{color:var(--text)}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.88rem}
+  th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:top}
+  th{color:var(--muted);font-weight:650;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}@media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .feat{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem}
+  .feat h4{font-size:.98rem;margin-bottom:.25rem;display:flex;gap:.45rem;align-items:center}.feat p{font-size:.86rem;color:var(--muted);margin:0}
+  .note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:.7rem .9rem;border-radius:0 8px 8px 0;margin:.8rem 0;font-size:.9rem}
+  .note.warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.8rem 0;font-size:.84rem}
+  .flow .step{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem}.flow .arr{color:var(--faint)}
+  footer{grid-column:1/-1;border-top:1px solid var(--border);padding:1.6rem 1.4rem;color:var(--faint);font-size:.84rem;text-align:center}
+</style>
+</head>
+<body>
+<a class="skip" href="#overview">Skip to content</a>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="dot"></span> epub-audiobook <small>· Documentation</small></div>
+    <span class="sp"></span>
+    <a class="gh" href="https://github.com/shubhambakre/epub-audiobook" target="_blank" rel="noopener">GitHub ↗</a>
+    <button class="themebtn" id="theme" aria-label="Toggle color theme">◐</button>
+  </header>
+
+  <nav class="toc" aria-label="Table of contents">
+    <div class="grp">Introduction</div>
+    <a href="#overview">Overview</a>
+    <a href="#features">What makes it fast</a>
+    <div class="grp">Get started</div>
+    <a href="#requirements">Requirements</a>
+    <a href="#install">Install</a>
+    <a href="#auth">Authentication</a>
+    <a href="#usage">Usage</a>
+    <a href="#flags">CLI flags</a>
+    <div class="grp">Reference</div>
+    <a href="#pipeline">How it works</a>
+    <a href="#cost">Cost &amp; free tier</a>
+    <a href="#structure">Project structure</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a href="#license">License</a>
+  </nav>
+
+  <main>
+    <section id="overview">
+      <h1>epub-audiobook</h1>
+      <p class="lead">A Python CLI that converts an EPUB into a <strong>single audiobook MP3 with navigable chapter markers</strong>, using Google Cloud Text-to-Speech Neural2 voices.</p>
+      <div class="badges"><span class="badge">Python</span><span class="badge">Google Cloud TTS</span><span class="badge">SSML</span><span class="badge">ffmpeg</span><span class="badge">Resumable</span></div>
+      <p>Chapter navigation works in Apple Books, VLC, and most audiobook players via ID3 <code>CHAP</code>/<code>CTOC</code> frames — no need for the M4B container.</p>
+    </section>
+
+    <section id="features">
+      <h2>What makes it fast</h2>
+      <p>Most EPUB→MP3 scripts re-encode every chunk through <code>pydub</code>, run sequentially, and emit tiny SSML payloads. This one does the opposite:</p>
+      <div class="grid2">
+        <div class="feat"><h4>📦 Packed SSML</h4><p>Packs SSML into ~4.8&nbsp;KB chunks (Google's hard limit), sentence-aligned.</p></div>
+        <div class="feat"><h4>⚡ Parallel synthesis</h4><p>Default 8 workers under a token-bucket rate limiter.</p></div>
+        <div class="feat"><h4>🎙️ No re-encode</h4><p>Concatenates with <code>ffmpeg -c copy</code> — fast even on long books.</p></div>
+        <div class="feat"><h4>🔖 Chapter markers</h4><p>Writes ID3 <code>CHAP</code>/<code>CTOC</code> frames for real chapter navigation.</p></div>
+        <div class="feat"><h4>↩️ Resumable</h4><p>Per-chunk MP3s are cached in <code>--workdir</code>, keyed by chapter + index.</p></div>
+        <div class="feat"><h4>✍️ Emphasis-aware</h4><p>Italics/bold map to SSML <code>&lt;emphasis&gt;</code> when the span stays within a sentence.</p></div>
+      </div>
+    </section>
+
+    <section id="requirements">
+      <h2>Requirements</h2>
+      <ul>
+        <li>Python 3.10+</li>
+        <li><code>ffmpeg</code> on the PATH</li>
+        <li>A Google Cloud project with the Text-to-Speech API enabled</li>
+      </ul>
+      <p class="muted">Python deps: <code>ebooklib</code>, <code>beautifulsoup4</code>, <code>lxml</code>, <code>requests</code>, <code>tqdm</code>, <code>mutagen</code>, <code>google-auth</code>.</p>
+    </section>
+
+    <section id="install">
+      <h2>Install</h2>
+      <pre><code>python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+brew install ffmpeg     # macOS; `apt install ffmpeg` on Linux</code></pre>
+    </section>
+
+    <section id="auth">
+      <h2>Authentication</h2>
+      <p>Pick one. A service-account JSON is recommended; API keys travel in URLs.</p>
+      <pre><code># Option A: service account (recommended)
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json
+
+# Option B: API key
+export GOOGLE_TTS_API_KEY=YOUR_KEY</code></pre>
+      <div class="note warn">Never commit credentials. The repo's <code>.gitignore</code> blocks <code>*.json</code>, <code>*.key</code>, and common credential filename patterns.</div>
+    </section>
+
+    <section id="usage">
+      <h2>Usage</h2>
+      <pre><code># Dry run — parse EPUB, report chapter/chunk/char counts, no API calls.
+python audiobook.py book.epub out.mp3 --dry-run
+
+# Real run
+python audiobook.py book.epub out.mp3
+
+# Different voice / speaking rate
+python audiobook.py book.epub out.mp3 --voice en-US-Neural2-D --speaking-rate 1.05
+
+# Resumable run with explicit working dir
+python audiobook.py book.epub out.mp3 --workdir ./chunks --keep-workdir</code></pre>
+      <div class="note">Always <code>--dry-run</code> first to see the character count before spending any TTS quota.</div>
+    </section>
+
+    <section id="flags">
+      <h2>CLI flags</h2>
+      <table>
+        <tr><th>Flag</th><th>Default</th><th>Notes</th></tr>
+        <tr><td><code>--voice</code></td><td><code>en-US-Neural2-F</code></td><td>Any Neural2 voice ID</td></tr>
+        <tr><td><code>--speaking-rate</code></td><td><code>1.0</code></td><td>Playback rate multiplier</td></tr>
+        <tr><td><code>--dry-run</code></td><td>off</td><td>Parse &amp; report counts, no API calls</td></tr>
+        <tr><td><code>--workdir</code></td><td>temp dir</td><td>Where per-chunk MP3s are cached (for resume)</td></tr>
+        <tr><td><code>--keep-workdir</code></td><td>off</td><td>Don't delete the cache after finishing</td></tr>
+      </table>
+      <p class="muted">Run <code>python audiobook.py --help</code> for the authoritative, current list.</p>
+    </section>
+
+    <section id="pipeline">
+      <h2>How it works</h2>
+      <div class="flow">
+        <span class="step">Parse EPUB (ebooklib)</span><span class="arr">→</span>
+        <span class="step">Extract chapters (BeautifulSoup)</span><span class="arr">→</span>
+        <span class="step">Sentence-split + SSML chunk (~4.8KB)</span><span class="arr">→</span>
+        <span class="step">Synthesize in parallel (TTS)</span><span class="arr">→</span>
+        <span class="step">ffmpeg -c copy concat</span><span class="arr">→</span>
+        <span class="step">Write ID3 CHAP/CTOC</span>
+      </div>
+      <p>Each chunk is cached by chapter + index, so an interrupted run resumes without re-synthesizing what's already done.</p>
+    </section>
+
+    <section id="cost">
+      <h2>Cost &amp; free tier</h2>
+      <p>Neural2 voices include <strong>1,000,000 characters/month free</strong>, then $0.000016/char. A typical 300-page non-fiction book is ~500–700k characters — usually within the free tier. The <code>--dry-run</code> count tells you before you commit.</p>
+    </section>
+
+    <section id="structure">
+      <h2>Project structure</h2>
+      <pre><code>epub-audiobook/
+├── audiobook.py        # the CLI (single module)
+├── requirements.txt
+├── README.md · LICENSE
+└── .gitignore          # blocks *.json / *.key / credential patterns</code></pre>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>Troubleshooting</h2>
+      <table>
+        <tr><th>Symptom</th><th>Likely cause / fix</th></tr>
+        <tr><td>Auth errors</td><td>Set <code>GOOGLE_APPLICATION_CREDENTIALS</code> or <code>GOOGLE_TTS_API_KEY</code>; confirm the TTS API is enabled.</td></tr>
+        <tr><td>No chapter markers</td><td>Player may not read ID3 chapters — try VLC or Apple Books.</td></tr>
+        <tr><td><code>ffmpeg: not found</code></td><td>Install ffmpeg and ensure it's on PATH.</td></tr>
+        <tr><td>Run interrupted</td><td>Re-run with the same <code>--workdir</code>; cached chunks are reused.</td></tr>
+      </table>
+    </section>
+
+    <section id="license">
+      <h2>License</h2>
+      <p>See <code>LICENSE</code> in the repository.</p>
+    </section>
+  </main>
+
+  <footer>epub-audiobook · Documentation · <a href="https://github.com/shubhambakre/epub-audiobook" target="_blank" rel="noopener">github.com/shubhambakre/epub-audiobook</a></footer>
+</div>
+<script>
+  const root=document.documentElement,tb=document.getElementById("theme");
+  const saved=localStorage.getItem("epubdoc-theme");if(saved)root.dataset.theme=saved;
+  tb.onclick=()=>{const t=root.dataset.theme==="dark"?"light":"dark";root.dataset.theme=t;localStorage.setItem("epubdoc-theme",t);};
+  document.querySelectorAll("pre").forEach(pre=>{const b=document.createElement("button");b.className="copy";b.textContent="Copy";b.onclick=()=>{navigator.clipboard.writeText(pre.querySelector("code").innerText);b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1200);};pre.appendChild(b);});
+  const links=[...document.querySelectorAll("nav.toc a")],map=new Map(links.map(a=>[a.getAttribute("href").slice(1),a]));
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove("active"));map.get(e.target.id)?.classList.add("active");}});},{rootMargin:"-20% 0px -70% 0px"});
+  document.querySelectorAll("section[id]").forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
